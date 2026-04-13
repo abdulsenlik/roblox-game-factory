@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roblox Game Factory — Developer Pipeline</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg-primary: #0a0a0b;
+    --bg-card: #111113;
+    --bg-card-hover: #18181b;
+    --bg-elevated: #1c1c1f;
+    --border-subtle: rgba(255,255,255,0.06);
+    --border-active: rgba(255,255,255,0.12);
+    --text-primary: #fafafa;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --accent-cyan: #22d3ee;
+    --accent-violet: #a78bfa;
+    --accent-amber: #fbbf24;
+    --accent-emerald: #34d399;
+    --accent-rose: #fb7185;
+    --accent-blue: #60a5fa;
+    --accent-orange: #fb923c;
+    --accent-pink: #f472b6;
+    --stage1: #22d3ee;
+    --stage2: #a78bfa;
+    --stage3: #fb923c;
+    --stage4: #34d399;
+    --stage5: #60a5fa;
+    --stage6: #fbbf24;
+    --stage7: #fb7185;
+    --stage8: #f472b6;
+    --ease-out-expo: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Header */
+  .header {
+    padding: 48px 48px 32px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    background: rgba(34, 211, 238, 0.08);
+    border: 1px solid rgba(34, 211, 238, 0.15);
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+    margin-bottom: 24px;
+  }
+
+  .header-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+    animation: pulse-dot 2s infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  .header h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fafafa 0%, #a1a1aa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 640px;
+    line-height: 1.6;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    gap: 1px;
+    background: var(--border-subtle);
+    border-radius: 16px;
+    overflow: hidden;
+    margin: 32px 48px 0;
+    max-width: 1344px;
+  }
+
+  .stat-item {
+    flex: 1;
+    padding: 20px 24px;
+    background: var(--bg-card);
+    text-align: center;
+    transition: background 0.4s var(--ease-out-expo);
+  }
+
+  .stat-item:hover { background: var(--bg-card-hover); }
+  .stat-item:first-child { border-radius: 16px 0 0 16px; }
+  .stat-item:last-child { border-radius: 0 16px 16px 0; }
+
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* Pipeline Section */
+  .pipeline-section {
+    padding: 48px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+  }
+
+  /* Pipeline Flow */
+  .pipeline-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: relative;
+  }
+
+  /* Parallel Group */
+  .parallel-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    position: relative;
+  }
+
+  .parallel-group::before {
+    content: 'PARALLEL';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent-emerald);
+    background: var(--bg-primary);
+    padding: 2px 12px;
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    border-radius: 100px;
+    z-index: 2;
+  }
+
+  .parallel-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  /* Stage Card */
+  .stage-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    padding: 0;
+    overflow: hidden;
+    transition: all 0.5s var(--ease-out-expo);
+    cursor: pointer;
+    position: relative;
+  }
+
+  .stage-card:hover {
+    border-color: var(--border-active);
+    transform: translateY(-2px);
+    box-shadow: 0 24px 48px -12px rgba(0,0,0,0.4);
+  }
+
+  .stage-card.expanded .stage-details { max-height: 800px; opacity: 1; padding: 0 24px 24px; }
+  .stage-card.expanded .expand-icon { transform: rotate(180deg); }
+
+  .stage-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 24px;
+  }
+
+  .stage-number {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .stage-number::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 16px;
+    opacity: 0.15;
+  }
+
+  .stage-info { flex: 1; min-width: 0; }
+
+  .stage-name {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 2px;
+  }
+
+  .stage-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .stage-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .meta-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+  }
+
+  .meta-tag.cost {
+    background: rgba(52, 211, 153, 0.08);
+    color: var(--accent-emerald);
+    border: 1px solid rgba(52, 211, 153, 0.12);
+  }
+
+  .meta-tag.time {
+    background: rgba(96, 165, 250, 0.08);
+    color: var(--accent-blue);
+    border: 1px solid rgba(96, 165, 250, 0.12);
+  }
+
+  .meta-tag.checkpoint {
+    background: rgba(251, 191, 36, 0.08);
+    color: var(--accent-amber);
+    border: 1px solid rgba(251, 191, 36, 0.12);
+  }
+
+  .meta-tag.checkpoint.skip {
+    background: rgba(113, 113, 122, 0.08);
+    color: var(--text-muted);
+    border: 1px solid rgba(113, 113, 122, 0.12);
+  }
+
+  .expand-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.4s var(--ease-spring);
+    flex-shrink: 0;
+    color: var(--text-muted);
+  }
+
+  /* Stage Details */
+  .stage-details {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.5s var(--ease-out-expo);
+    padding: 0 24px;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .detail-block {
+    background: var(--bg-elevated);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .detail-block.full-width { grid-column: 1 / -1; }
+
+  .detail-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .detail-value {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .detail-value code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: rgba(255,255,255,0.06);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent-cyan);
+  }
+
+  .tool-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 2px;
+    color: var(--text-primary);
+  }
+
+  .tool-chip.primary { border-color: rgba(34, 211, 238, 0.3); background: rgba(34, 211, 238, 0.06); }
+  .tool-chip.secondary { border-color: rgba(167, 139, 250, 0.3); background: rgba(167, 139, 250, 0.06); }
+  .tool-chip.fallback { border-color: rgba(113, 113, 122, 0.2); }
+
+  .tool-role {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+
+  /* Error recovery */
+  .error-flow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .error-step {
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-secondary);
+    padding: 4px 10px;
+    background: rgba(251, 113, 133, 0.06);
+    border: 1px solid rgba(251, 113, 133, 0.1);
+    border-radius: 6px;
+  }
+
+  .error-arrow {
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  /* Flow connectors */
+  .flow-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    position: relative;
+  }
+
+  .flow-connector::before {
+    content: '';
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--border-active), var(--border-subtle));
+  }
+
+  .flow-connector.merge {
+    height: 48px;
+  }
+
+  .flow-connector.merge::before {
+    background: linear-gradient(180deg, var(--accent-emerald), var(--border-subtle));
+  }
+
+  .merge-label {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent-emerald);
+    background: var(--bg-primary);
+    padding: 2px 12px;
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    border-radius: 100px;
+  }
+
+  /* QA Loop */
+  .qa-loop-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: rgba(251, 113, 133, 0.06);
+    border: 1px solid rgba(251, 113, 133, 0.12);
+    border-radius: 10px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-rose);
+    margin-top: 8px;
+  }
+
+  .qa-loop-indicator svg { flex-shrink: 0; }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 24px 48px;
+    max-width: 1440px;
+    margin: 0 auto 24px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 4px;
+  }
+
+  /* Cost summary */
+  .cost-summary {
+    margin: 0 48px 48px;
+    max-width: 1344px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .cost-header {
+    padding: 24px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .cost-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .cost-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1px;
+    background: var(--border-subtle);
+  }
+
+  .cost-cell {
+    padding: 20px 24px;
+    background: var(--bg-card);
+  }
+
+  .cost-cell-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .cost-cell-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .cost-cell-note {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 32px 48px 48px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  /* Color assignments */
+  .s1 .stage-number { background: rgba(34,211,238,0.12); color: var(--stage1); }
+  .s1 .stage-number::after { background: var(--stage1); }
+  .s2 .stage-number { background: rgba(167,139,250,0.12); color: var(--stage2); }
+  .s2 .stage-number::after { background: var(--stage2); }
+  .s3 .stage-number { background: rgba(251,146,60,0.12); color: var(--stage3); }
+  .s3 .stage-number::after { background: var(--stage3); }
+  .s4 .stage-number { background: rgba(52,211,153,0.12); color: var(--stage4); }
+  .s4 .stage-number::after { background: var(--stage4); }
+  .s5 .stage-number { background: rgba(96,165,250,0.12); color: var(--stage5); }
+  .s5 .stage-number::after { background: var(--stage5); }
+  .s6 .stage-number { background: rgba(251,191,36,0.12); color: var(--stage6); }
+  .s6 .stage-number::after { background: var(--stage6); }
+  .s7 .stage-number { background: rgba(251,113,133,0.12); color: var(--stage7); }
+  .s7 .stage-number::after { background: var(--stage7); }
+  .s8 .stage-number { background: rgba(244,114,182,0.12); color: var(--stage8); }
+  .s8 .stage-number::after { background: var(--stage8); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header, .pipeline-section, .legend { padding-left: 16px; padding-right: 16px; }
+    .stats-bar, .cost-summary { margin-left: 16px; margin-right: 16px; }
+    .parallel-group { grid-template-columns: 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .stage-meta { flex-wrap: wrap; }
+    .cost-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* Scroll animations */
+  .animate-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.7s var(--ease-out-expo);
+  }
+  .animate-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="header animate-in">
+  <div class="header-badge">Autonomous Pipeline Architecture</div>
+  <h1>Roblox Game Factory</h1>
+  <p>GDD in, playable game out. The complete 8-stage pipeline with reconciled tool selections, parallel execution, error recovery, and cost modeling — synthesized from 4 research reports.</p>
+</div>
+
+<div class="stats-bar animate-in">
+  <div class="stat-item">
+    <div class="stat-value">8</div>
+    <div class="stat-label">Pipeline Stages</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value">~$300</div>
+    <div class="stat-label">Per Complex Game</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value">4–6h</div>
+    <div class="stat-label">Wall-Clock Time</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value">Temporal</div>
+    <div class="stat-label">Orchestrator</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value">30–40%</div>
+    <div class="stat-label">Saved via Parallelism</div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-cyan)"></div> Primary Tool</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-violet)"></div> Secondary Tool</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--text-muted)"></div> Fallback</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-amber)"></div> Human Checkpoint</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-rose)"></div> Error Recovery Loop</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-emerald)"></div> Parallel Execution</div>
+</div>
+
+<div class="pipeline-section">
+  <div class="section-title">Execution Pipeline</div>
+
+  <div class="pipeline-flow">
+
+    <!-- STAGE 1 -->
+    <div class="stage-card s1 animate-in" onclick="this.classList.toggle('expanded')">
+      <div class="stage-header">
+        <div class="stage-number">01</div>
+        <div class="stage-info">
+          <div class="stage-name">Parse GDD</div>
+          <div class="stage-subtitle">concept → structured JSON manifest</div>
+        </div>
+        <div class="stage-meta">
+          <div class="meta-tag cost">~$1.50</div>
+          <div class="meta-tag time">30–90s</div>
+          <div class="meta-tag checkpoint">HUMAN REVIEW</div>
+          <div class="expand-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+      </div>
+      <div class="stage-details">
+        <div class="detail-grid">
+          <div class="detail-block">
+            <div class="detail-label">Tools</div>
+            <div class="detail-value">
+              <span class="tool-chip primary"><span class="tool-role">primary</span> Claude Opus 4.6</span>
+              <span class="tool-chip secondary"><span class="tool-role">alt</span> Claude Sonnet Batch (50% off)</span>
+              <span class="tool-chip fallback"><span class="tool-role">fallback</span> Gemini 2.5 Flash</span>
+            </div>
+          </div>
+          <div class="detail-block">
+            <div class="detail-label">Input → Output</div>
+            <div class="detail-value">1–2 paragraph game concept or full GDD spreadsheet → Structured JSON manifest with <code>units[]</code>, <code>maps[]</code>, <code>items[]</code>, <code>enemies[]</code>, <code>systems[]</code>, <code>vfx[]</code></div>
+          </div>
+          <div class="detail-block">
+            <div class="detail-label">Parallelization</div>
+            <div class="detail-value">4-way section parsing (units, maps, items, systems) then merge. Reduces to ~25s.</div>
+          </div>
+          <div class="detail-block">
+            <div class="detail-label">QA Checks</div>
+            <div class="detail-value">JSON schema validation (Pydantic), balance checks (stat ranges), completeness check (all assets have gen specs), token budget estimate</div>
+          </div>
+          <div class="detail-block full-width">
+            <div class="detail-label">Error Recovery</div>
+            <div class="error-flow">
+              <div class="error-step">LLM returns invalid JSON</div>
+              <div class="error-arrow">→</div>
+              <div class="error-step">validate against schema</div>
+              <div class="error-arrow">→</div>
+              <div class="error-step">re-prompt with error (3x max)</div>
+              <div class="error-arrow">→</div>
+              <div class="error-step">fallback: template GDD fill</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-connector"></div>
+
+    <!-- PARALLEL GROUP: Stages 2-5 (art pipeline) || Stage 6 (code gen) -->
+    <div style="position:relative; padding-top: 28px;">
+      <div class="parallel-group">
+
+        <!-- LEFT: Art Pipeline (Stages 2-5) -->
+        <div class="parallel-left">
+
+          <!-- STAGE 2 -->
+          <div class="stage-card s2 animate-in" onclick="this.classList.toggle('expanded')">
+            <div class="stage-header">
+              <div class="stage-number">02</div>
+              <div class="stage-info">
+                <div class="stage-name">Generate 2D Assets</div>
+                <div class="stage-subtitle">manifest → PNGs (concept art, cards, textures)</div>
+              </div>
+              <div class="stage-meta">
+                <div class="meta-tag cost">~$10</div>
+                <div class="meta-tag time">25–65m</div>
+                <div class="meta-tag checkpoint skip">SKIPPABLE</div>
+                <div class="expand-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+              </div>
+            </div>
+            <div class="stage-details">
+              <div class="detail-grid">
+                <div class="detail-block">
+                  <div class="detail-label">Tools</div>
+                  <div class="detail-value">
+                    <span class="tool-chip primary"><span class="tool-role">primary</span> Stability SDXL ($0.004/img)</span>
+                    <span class="tool-chip secondary"><span class="tool-role">anime</span> CounterfeitXL ($0.012/img)</span>
+                    <span class="tool-chip secondary"><span class="tool-role">post</span> rembg (free, local)</span>
+                    <span class="tool-chip fallback"><span class="tool-role">alt</span> Flux 2 via fal.ai</span>
+                  </div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">Pipeline</div>
+                  <div class="detail-value">Generate raw → rembg background removal → PIL crop/resize → CLIP quality score against prompt → dedup via perceptual hash</div>
+                </div>
+                <div class="detail-block full-width">
+                  <div class="detail-label">Error Recovery</div>
+                  <div class="error-flow">
+                    <div class="error-step">NSFW filter / rate limit</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">modify prompt + exponential backoff</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">swap to alt provider</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">queue for batch retry</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-connector"></div>
+
+          <!-- STAGE 3 -->
+          <div class="stage-card s3 animate-in" onclick="this.classList.toggle('expanded')">
+            <div class="stage-header">
+              <div class="stage-number">03</div>
+              <div class="stage-info">
+                <div class="stage-name">Generate 3D Assets</div>
+                <div class="stage-subtitle">2D refs → GLB/FBX meshes + textures</div>
+              </div>
+              <div class="stage-meta">
+                <div class="meta-tag cost">~$122</div>
+                <div class="meta-tag time">25–75m</div>
+                <div class="meta-tag checkpoint">ESSENTIAL (v1)</div>
+                <div class="expand-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+              </div>
+            </div>
+            <div class="stage-details">
+              <div class="detail-grid">
+                <div class="detail-block">
+                  <div class="detail-label">Multi-Tool Stack</div>
+                  <div class="detail-value">
+                    <span class="tool-chip primary"><span class="tool-role">bulk 60%</span> Tripo3D v3 ($0.17/model)</span>
+                    <span class="tool-chip secondary"><span class="tool-role">anime 30%</span> Meshy v6 ($0.40/model)</span>
+                    <span class="tool-chip secondary"><span class="tool-role">R15 10%</span> Sloyd Pro ($50/mo flat)</span>
+                    <span class="tool-chip fallback"><span class="tool-role">hero &lt;5%</span> Rodin Gen-2 ($0.40–1.50)</span>
+                  </div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">Concurrency</div>
+                  <div class="detail-value">Tripo: 20 concurrent. Meshy Pro: 10 concurrent. Sloyd: near-instant. 500 models ≈ 2–3 hrs parallel.</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">QA Checks</div>
+                  <div class="detail-value">Triangle count ≤ 20K (pre-decimate), watertight validation, UV coverage, bounding box sanity, CLIP visual similarity to 2D ref</div>
+                </div>
+                <div class="detail-block full-width">
+                  <div class="detail-label">Error Recovery (10–15% failure rate)</div>
+                  <div class="error-flow">
+                    <div class="error-step">generation fails</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">retry 3x same input</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">retry with enhanced ref image</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">fall back text-to-3D</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">flag for manual</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-connector"></div>
+
+          <!-- STAGE 4 -->
+          <div class="stage-card s4 animate-in" onclick="this.classList.toggle('expanded')">
+            <div class="stage-header">
+              <div class="stage-number">04</div>
+              <div class="stage-info">
+                <div class="stage-name">Process Meshes</div>
+                <div class="stage-subtitle">raw meshes → optimized (≤8K tris, clean UVs)</div>
+              </div>
+              <div class="stage-meta">
+                <div class="meta-tag cost">~$3</div>
+                <div class="meta-tag time">15–80m</div>
+                <div class="meta-tag checkpoint skip">SKIPPABLE</div>
+                <div class="expand-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+              </div>
+            </div>
+            <div class="stage-details">
+              <div class="detail-grid">
+                <div class="detail-block">
+                  <div class="detail-label">Tools</div>
+                  <div class="detail-value">
+                    <span class="tool-chip primary"><span class="tool-role">primary</span> PyMeshLab (decimation)</span>
+                    <span class="tool-chip secondary"><span class="tool-role">cleanup</span> Blender headless (UV/bake/icons)</span>
+                    <span class="tool-chip fallback"><span class="tool-role">alt</span> Open3D / trimesh</span>
+                  </div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">Pipeline Steps</div>
+                  <div class="detail-value">Load mesh → remove dupes → quadric edge collapse → verify manifold → UV unwrap if missing (Blender fallback) → export FBX → render 256x256 icon</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">QA Checks</div>
+                  <div class="detail-value">tri_count ≤ 8,000 · is_manifold · UV coverage > 85% · no degenerate faces · bounding box < 100 studs · texture 512² or 1024²</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">Parallelization</div>
+                  <div class="detail-value">Embarrassingly parallel. N workers = N CPU cores. 8-core Mac runs 8 meshes simultaneously.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-connector"></div>
+
+          <!-- STAGE 5 -->
+          <div class="stage-card s5 animate-in" onclick="this.classList.toggle('expanded')">
+            <div class="stage-header">
+              <div class="stage-number">05</div>
+              <div class="stage-info">
+                <div class="stage-name">Upload to Roblox</div>
+                <div class="stage-subtitle">processed assets → Roblox asset IDs</div>
+              </div>
+              <div class="stage-meta">
+                <div class="meta-tag cost">$0</div>
+                <div class="meta-tag time">30–45m</div>
+                <div class="meta-tag checkpoint skip">SKIPPABLE</div>
+                <div class="expand-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+              </div>
+            </div>
+            <div class="stage-details">
+              <div class="detail-grid">
+                <div class="detail-block">
+                  <div class="detail-label">Tools</div>
+                  <div class="detail-value">
+                    <span class="tool-chip primary"><span class="tool-role">primary</span> Roblox Open Cloud Assets API</span>
+                    <span class="tool-chip secondary"><span class="tool-role">python</span> rblx-open-cloud (async wrapper)</span>
+                    <span class="tool-chip secondary"><span class="tool-role">cli</span> rbxcloud (Rust CLI)</span>
+                    <span class="tool-chip secondary"><span class="tool-role">bulk</span> Tarmac (asset sync)</span>
+                  </div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">Rate Limits</div>
+                  <div class="detail-value">~60 req/min per API key. ~1,300 uploads for complex game ≈ 22 min raw, 30–45 min with safety margin. 20MB max per file.</div>
+                </div>
+                <div class="detail-block full-width">
+                  <div class="detail-label">Error Recovery</div>
+                  <div class="error-flow">
+                    <div class="error-step">429 rate limit</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">read x-ratelimit-remaining header</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">exponential backoff</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">stagger queue to next window</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: Stage 6 (Code Gen — runs parallel to art pipeline) -->
+        <div>
+          <!-- STAGE 6 -->
+          <div class="stage-card s6 animate-in" onclick="this.classList.toggle('expanded')" style="height: 100%; display:flex; flex-direction:column;">
+            <div class="stage-header">
+              <div class="stage-number">06</div>
+              <div class="stage-info">
+                <div class="stage-name">Generate Luau Scripts</div>
+                <div class="stage-subtitle">GDD + templates → game systems code</div>
+              </div>
+              <div class="stage-meta">
+                <div class="meta-tag cost">~$21</div>
+                <div class="meta-tag time">10–50m</div>
+                <div class="meta-tag checkpoint">ESSENTIAL (combat/economy)</div>
+                <div class="expand-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+              </div>
+            </div>
+            <div class="stage-details" style="flex:1;">
+              <div class="detail-grid">
+                <div class="detail-block">
+                  <div class="detail-label">Tools</div>
+                  <div class="detail-value">
+                    <span class="tool-chip primary"><span class="tool-role">bulk</span> Claude Sonnet 4.6 Batch (50% off)</span>
+                    <span class="tool-chip secondary"><span class="tool-role">complex</span> Claude Opus 4.6</span>
+                    <span class="tool-chip fallback"><span class="tool-role">cheap</span> Gemini 2.5 Flash</span>
+                  </div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">Architecture: Template-First</div>
+                  <div class="detail-value">Pre-built Luau templates for combat, economy, UI, VFX, DataStore. LLM fills parameters (asset IDs, stats, configs) — not writing from scratch. <strong>70% token savings.</strong></div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">Validation Stack</div>
+                  <div class="detail-value">
+                    <span class="tool-chip primary"><span class="tool-role">lint</span> Selene (Rust, &lt;1s)</span>
+                    <span class="tool-chip primary"><span class="tool-role">format</span> StyLua</span>
+                    <span class="tool-chip primary"><span class="tool-role">test</span> Lune runtime</span>
+                  </div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">Key Insight</div>
+                  <div class="detail-value">Starts immediately after Stage 1 — only needs GDD manifest, NOT art assets. Runs fully parallel to Stages 2–5, saving 30–40% wall-clock time.</div>
+                </div>
+                <div class="detail-block full-width">
+                  <div class="detail-label">Error Recovery (generate → lint → test → fix loop)</div>
+                  <div class="error-flow">
+                    <div class="error-step">generate from template</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">Selene lint</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">StyLua format</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">Lune unit test</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">re-prompt with errors (3x max)</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-step">fallback: template code</div>
+                  </div>
+                </div>
+              </div>
+              <div class="qa-loop-indicator">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7a6 6 0 1011.5 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 7l2.5 2.5L10 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Max 3 retries per script · OpenGameEval: best LLM solves 56% on first attempt
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Merge connector -->
+    <div class="flow-connector merge">
+      <div class="merge-label">MERGE — asset IDs + scripts</div>
+    </div>
+
+    <!-- STAGE 7 -->
+    <div class="stage-card s7 animate-in" onclick="this.classList.toggle('expanded')">
+      <div class="stage-header">
+        <div class="stage-number">07</div>
+        <div class="stage-info">
+          <div class="stage-name">Assemble Place File</div>
+          <div class="stage-subtitle">scripts + asset IDs → .rbxlx</div>
+        </div>
+        <div class="stage-meta">
+          <div class="meta-tag cost">$0</div>
+          <div class="meta-tag time">10–60s</div>
+          <div class="meta-tag checkpoint">RECOMMENDED</div>
+          <div class="expand-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+      </div>
+      <div class="stage-details">
+        <div class="detail-grid">
+          <div class="detail-block">
+            <div class="detail-label">Tools (Progressive)</div>
+            <div class="detail-value">
+              <span class="tool-chip primary"><span class="tool-role">MVP</span> Python XML builder (generate_place.py)</span>
+              <span class="tool-chip secondary"><span class="tool-role">v2</span> Rojo build (file-based, maintainable)</span>
+              <span class="tool-chip secondary"><span class="tool-role">v3</span> Roblox Studio MCP (live manipulation)</span>
+            </div>
+          </div>
+          <div class="detail-block">
+            <div class="detail-label">Structure</div>
+            <div class="detail-value">Workspace (maps, assets) → ServerScriptService (server scripts) → ReplicatedStorage (shared modules, RemoteEvents) → StarterGui (UI) → StarterPlayer (client scripts)</div>
+          </div>
+          <div class="detail-block full-width">
+            <div class="detail-label">Error Recovery</div>
+            <div class="error-flow">
+              <div class="error-step">XML malformed / MCP drops</div>
+              <div class="error-arrow">→</div>
+              <div class="error-step">checkpoint after each sub-tree</div>
+              <div class="error-arrow">→</div>
+              <div class="error-step">resume from checkpoint</div>
+              <div class="error-arrow">→</div>
+              <div class="error-step">fallback: XML builder if MCP fails</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-connector"></div>
+
+    <!-- STAGE 8 -->
+    <div class="stage-card s8 animate-in" onclick="this.classList.toggle('expanded')">
+      <div class="stage-header">
+        <div class="stage-number">08</div>
+        <div class="stage-info">
+          <div class="stage-name">Publish + QA</div>
+          <div class="stage-subtitle">.rbxlx → live Roblox experience URL</div>
+        </div>
+        <div class="stage-meta">
+          <div class="meta-tag cost">$0</div>
+          <div class="meta-tag time">30–60m</div>
+          <div class="meta-tag checkpoint">ESSENTIAL</div>
+          <div class="expand-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+      </div>
+      <div class="stage-details">
+        <div class="detail-grid">
+          <div class="detail-block">
+            <div class="detail-label">Tools</div>
+            <div class="detail-value">
+              <span class="tool-chip primary"><span class="tool-role">publish</span> Roblox Open Cloud Places API</span>
+              <span class="tool-chip primary"><span class="tool-role">QA</span> Studio MCP Playtest Agent (beta)</span>
+              <span class="tool-chip secondary"><span class="tool-role">offline QA</span> Lune test harness</span>
+            </div>
+          </div>
+          <div class="detail-block">
+            <div class="detail-label">Playtest Agent Limits</div>
+            <div class="detail-value">50-turn max per test · no real-time combat · single-player only · daily usage cap · runs on Roblox-hosted model (no token cost)</div>
+          </div>
+          <div class="detail-block">
+            <div class="detail-label">QA Scenarios</div>
+            <div class="detail-value">"Player can spawn and move" · "Shop UI opens and buys item" · "Combat deals correct damage" · "Gacha pull returns valid unit" · No server errors in 60s · Frame rate + memory check</div>
+          </div>
+          <div class="detail-block full-width">
+            <div class="detail-label">Error Recovery</div>
+            <div class="error-flow">
+              <div class="error-step">QA fails</div>
+              <div class="error-arrow">→</div>
+              <div class="error-step">log specific failures</div>
+              <div class="error-arrow">→</div>
+              <div class="error-step">loop back to Stage 6 or 7</div>
+              <div class="error-arrow">→</div>
+              <div class="error-step">targeted fix</div>
+              <div class="error-arrow">→</div>
+              <div class="error-step">re-publish + re-test</div>
+            </div>
+            <div class="qa-loop-indicator">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7a6 6 0 1011.5 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 7l2.5 2.5L10 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                QA failure loops back to Stage 6 (code) or Stage 7 (assembly) — not full pipeline restart
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Cost Summary -->
+<div class="cost-summary animate-in">
+  <div class="cost-header">
+    <h3>Total Cost Model — Complex Game (Multiverse Squad Scale, ~500 3D Assets)</h3>
+  </div>
+  <div class="cost-grid">
+    <div class="cost-cell">
+      <div class="cost-cell-label">3D Generation</div>
+      <div class="cost-cell-value" style="color:var(--stage3)">$122</div>
+      <div class="cost-cell-note">Tripo + Sloyd + Rodin</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-cell-label">2D Generation</div>
+      <div class="cost-cell-value" style="color:var(--stage2)">$10</div>
+      <div class="cost-cell-note">SDXL + CounterfeitXL</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-cell-label">LLM API</div>
+      <div class="cost-cell-value" style="color:var(--stage6)">$21</div>
+      <div class="cost-cell-note">GDD + code gen + QA (Batch)</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-cell-label">Compute</div>
+      <div class="cost-cell-value" style="color:var(--stage4)">$3</div>
+      <div class="cost-cell-note">Mesh processing (local/cloud)</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-cell-label">Infrastructure</div>
+      <div class="cost-cell-value" style="color:var(--text-secondary)">$47</div>
+      <div class="cost-cell-note">Temporal Cloud (amortized)</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-cell-label" style="font-weight:800">Per-Game Total</div>
+      <div class="cost-cell-value" style="color:var(--accent-cyan)">~$203</div>
+      <div class="cost-cell-note">+50% retry buffer = ~$305</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-cell-label">Pipeline Runtime</div>
+      <div class="cost-cell-value" style="color:var(--accent-blue)">4–6h</div>
+      <div class="cost-cell-note">With parallel overlap</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-cell-label">At 10 Games/Month</div>
+      <div class="cost-cell-value" style="color:var(--accent-amber)">~$1.9K</div>
+      <div class="cost-cell-note">~$175–205/game (economies of scale)</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  Roblox Game Factory — Reconciled from 4 research reports · April 2026 · Temporal.io + Tripo/Meshy/Sloyd + Claude + Open Cloud
+</div>
+
+<script>
+  // Scroll-triggered animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 60);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
